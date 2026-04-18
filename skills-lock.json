@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "task-management": {
+      "source": "anthropics/knowledge-work-plugins",
+      "sourceType": "github",
+      "computedHash": "a1f9389c1f06bb9c630001875e0801eb209b08818ba217f0114bc62d149eb056"
+    }
+  }
+}
