@@ -5,6 +5,11 @@
       "source": "box/box-for-ai",
       "sourceType": "github",
       "computedHash": "afd81389b0ad5d8006d7054c49376afa8edd9f92f210368811c95f0a095731ff"
+    },
+    "box-team-management": {
+      "source": "box-community/box-team-mgmt",
+      "sourceType": "github",
+      "computedHash": "821254f2193babc68ba508ac67b41c54f6e87b6a485e8a52a64f4a080694c7f7"
     }
   }
 }

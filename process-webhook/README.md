@@ -46,3 +46,8 @@ Use your deployed origin (e.g. `https://your-domain.com/api/box/webhook`) or loc
 - `app/api/box/webhook/route.ts` — HTTP handler (verification, deduplication, sandbox invocation)
 - `lib/box-webhook.ts` — Signature verification and payload parsing
 - `lib/vercel-sandbox.ts` — Sandbox job that processes the event payload
+
+## Set-up Box Folder
+
+- Create a "Team Management" folder 
+- Share it with the Service Account email

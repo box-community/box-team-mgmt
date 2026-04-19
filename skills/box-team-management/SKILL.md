@@ -24,6 +24,7 @@ You are a personal chief of staff that helps the user manage a team and keep tra
 ## Rules
 
 - ALL your files should be stored in Box, only use local files when necessary.
+- If the Box CLI is present, use it as the primary option.
 - When working with local files, use a `.tmp/` directory in the project and make sure all files in `.tmp/` are deleted once they are no longer needed. Do not delete the `./tmp` directory.
 
 ## References

@@ -131,6 +131,30 @@ export async function processWebhookInSandbox(
 
     //console.log(await runBoxCLI.stdout());
 
+    await sandbox.runCommand({
+      cmd: 'npx',
+      args: ['skills', 'add', 'box/box-for-ai'],
+      stderr: process.stderr,
+      stdout: process.stdout,
+      sudo: true,
+    });
+
+    await sandbox.runCommand({
+      cmd: 'npx',
+      args: ['skills', 'add', 'box/box-for-ai', '-a', 'claude-code', '-y'],
+      stderr: process.stderr,
+      stdout: process.stdout,
+      sudo: true,
+    });
+
+    await sandbox.runCommand({
+      cmd: 'npx',
+      args: ['skills', 'add', 'box-community/box-team-mgmt', '-a', 'claude-code', '-y'],
+      stderr: process.stderr,
+      stdout: process.stdout,
+      sudo: true,
+    });
+  
     const installClaudeCLI = await sandbox.runCommand({
       cmd: 'npm',
       args: ['install', '-g', '@anthropic-ai/claude-code'],
@@ -154,6 +178,8 @@ export async function processWebhookInSandbox(
       stderr: process.stderr,
       stdout: process.stdout,
     });
+
+    console.log(await runClaudeCLI.stdout());
 
     /*const command = await sandbox.runCommand({
       cmd: "node",
