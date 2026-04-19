@@ -99,20 +99,6 @@ export async function POST(request: Request) {
     
     const result = await processWebhookInSandbox(event);
     console.log(result);
-    /*return NextResponse.json(
-      {
-        ok: result.exitCode === 0,
-        duplicate: false,
-        deliveryId,
-        eventId: event.id,
-        trigger: event.trigger,
-        sandboxId: result.sandboxId,
-        sandboxExitCode: result.exitCode,
-        sandboxStdout: result.stdout.trim(),
-        sandboxStderr: result.stderr.trim(),
-      },
-      { status: result.exitCode === 0 ? 202 : 502 },
-    );*/
     
     return NextResponse.json({ok: true})
 
