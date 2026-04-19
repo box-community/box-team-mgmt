@@ -96,9 +96,10 @@ export async function POST(request: Request) {
   markInFlight(event.id);
 
   try {
+    
     const result = await processWebhookInSandbox(event);
-
-    return NextResponse.json(
+    console.log(result);
+    /*return NextResponse.json(
       {
         ok: result.exitCode === 0,
         duplicate: false,
@@ -111,7 +112,10 @@ export async function POST(request: Request) {
         sandboxStderr: result.stderr.trim(),
       },
       { status: result.exitCode === 0 ? 202 : 502 },
-    );
+    );*/
+    
+    return NextResponse.json({ok: true})
+
   } catch (error) {
     unmarkEvent(event.id);
 

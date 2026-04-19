@@ -1,33 +1,6 @@
----
-name: task-management
-description: Simple task management using a shared TASKS.md file. Reference this when the user asks about their tasks, wants to add/complete tasks, or needs help tracking commitments.
-user-invocable: false
----
-
 # Task Management
 
-Tasks are tracked in a simple `TASKS.md` file that both you and the user can edit.
-
-## File Location
-
-**Always use `TASKS.md` in the current working directory.**
-
-- If it exists, read/write to it
-- If it doesn't exist, create it with the template below
-
-## Dashboard Setup (First Run)
-
-A visual dashboard is available for managing tasks and memory. **On first interaction with tasks:**
-
-1. Check if `dashboard.html` exists in the current working directory
-2. If not, copy it from `${CLAUDE_PLUGIN_ROOT}/skills/dashboard.html` to the current working directory
-3. Inform the user: "I've added the dashboard. Run `/productivity:start` to set up the full system."
-
-The task board:
-- Reads and writes to the same `TASKS.md` file
-- Auto-saves changes
-- Watches for external changes (syncs when you edit via CLI)
-- Supports drag-and-drop reordering of tasks and sections
+Tasks are tracked in a simple `TASKS.md`.
 
 ## Format & Template
 
@@ -72,7 +45,7 @@ Task format:
 - Read the Waiting On section
 - Note how long each item has been waiting
 
-## Conventions
+### Conventions
 
 - **Bold** the task title for scannability
 - Include "for [person]" when it's a commitment to someone

@@ -1,10 +1,10 @@
 {
   "version": 1,
   "skills": {
-    "task-management": {
-      "source": "anthropics/knowledge-work-plugins",
+    "box": {
+      "source": "box/box-for-ai",
       "sourceType": "github",
-      "computedHash": "a1f9389c1f06bb9c630001875e0801eb209b08818ba217f0114bc62d149eb056"
+      "computedHash": "afd81389b0ad5d8006d7054c49376afa8edd9f92f210368811c95f0a095731ff"
     }
   }
 }
