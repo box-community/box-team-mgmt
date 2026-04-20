@@ -2,7 +2,7 @@ import { Sandbox } from "@vercel/sandbox";
 import type { BoxWebhookEvent } from "./box-webhook";
 
 type SandboxJobResult = {
-  sandboxId: string;
+  sandboxName: string;
 };
 
 const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;
@@ -64,106 +64,128 @@ export async function processWebhookInSandbox(
   event: BoxWebhookEvent,
 ): Promise<SandboxJobResult> {
   
-  const sandbox = await Sandbox.create({
+  let sandbox;
+  let bootstrap = false;
+  try {
+    sandbox = await Sandbox.get({ name: 'box-team-mgmt-sandbox', resume: true });
+  }
+  catch (error) {
+    sandbox = await Sandbox.create({
+      ...getCredentials(),
+      name: 'box-team-mgmt-sandbox',
+      snapshotExpiration: 7 * 24 * 60 * 60 * 1000, // 7 days
+      runtime: process.env.VERCEL_SANDBOX_RUNTIME ?? DEFAULT_RUNTIME,
+      timeout: Number(process.env.VERCEL_SANDBOX_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS),
+      resources: {
+        vcpus: Number(process.env.VERCEL_SANDBOX_VCPUS ?? DEFAULT_VCPUS),
+      },
+    });
+    bootstrap = true;
+  }
+  
+  /*const sandbox = await Sandbox.create({
     ...getCredentials(),
     runtime: process.env.VERCEL_SANDBOX_RUNTIME ?? DEFAULT_RUNTIME,
     timeout: Number(process.env.VERCEL_SANDBOX_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS),
     resources: {
       vcpus: Number(process.env.VERCEL_SANDBOX_VCPUS ?? DEFAULT_VCPUS),
     },
-  });
+  });*/
 
   try {
-    await sandbox.mkDir("jobs");
+    // if we're starting this sandbox from scratch, bootstrap it
+    if (bootstrap) {
+      await sandbox.mkDir("jobs");
+      
+      await sandbox.writeFiles([
+        {
+          path: "jobs/event.json",
+          content: Buffer.from(JSON.stringify(event, null, 2)),
+        },
+        {
+          path: "jobs/processor.mjs",
+          content: Buffer.from(PROCESSOR_SOURCE),
+        },
+        {
+          path: "jobs/config.json",
+          content: Buffer.from(BOX_CONFIG_SOURCE),
+        },
+      ]);
+
+      // Install Box CLI globally
+      const installBoxCLI = await sandbox.runCommand({
+        cmd: 'npm',
+        args: ['install', '-g', '@box/cli'],
+        stderr: process.stderr,
+        stdout: process.stdout,
+        sudo: true,
+      });
+      if (installBoxCLI.exitCode !== 0) throw new Error('Box CLI install failed');
+
+      //console.log(await installBoxCLI.stdout());
+
+      // Run an authenticated Claude Code command in non-interactive (-p) mode
+      const configureBoxEnvironmentCLI = await sandbox.runCommand({
+        cmd: 'box',
+        args: [
+          'configure:environments:add',
+          './jobs/config.json',
+          '--ccg-auth',
+          '--name', 'ci-ccg',
+          '--set-as-current'
+        ],
+        stderr: process.stderr,
+        stdout: process.stdout,
+      });
+
+      //console.log(await configureBoxEnvironmentCLI.stdout());
+
+      const runBoxCLI = await sandbox.runCommand({
+        cmd: 'box',
+        args: [
+          'users:get', 'me'
+        ],
+        stderr: process.stderr,
+        stdout: process.stdout,
+      });
+
+      //console.log(await runBoxCLI.stdout());
+
+      await sandbox.runCommand({
+        cmd: 'npx',
+        args: ['skills', 'add', 'box/box-for-ai'],
+        stderr: process.stderr,
+        stdout: process.stdout,
+        sudo: true,
+      });
+
+      await sandbox.runCommand({
+        cmd: 'npx',
+        args: ['skills', 'add', 'box/box-for-ai', '-a', 'claude-code', '-y'],
+        stderr: process.stderr,
+        stdout: process.stdout,
+        sudo: true,
+      });
+
+      await sandbox.runCommand({
+        cmd: 'npx',
+        args: ['skills', 'add', 'box-community/box-team-mgmt', '-a', 'claude-code', '-y'],
+        stderr: process.stderr,
+        stdout: process.stdout,
+        sudo: true,
+      });
     
-    await sandbox.writeFiles([
-      {
-        path: "jobs/event.json",
-        content: Buffer.from(JSON.stringify(event, null, 2)),
-      },
-      {
-        path: "jobs/processor.mjs",
-        content: Buffer.from(PROCESSOR_SOURCE),
-      },
-      {
-        path: "jobs/config.json",
-        content: Buffer.from(BOX_CONFIG_SOURCE),
-      },
-    ]);
+      const installClaudeCLI = await sandbox.runCommand({
+        cmd: 'npm',
+        args: ['install', '-g', '@anthropic-ai/claude-code'],
+        stderr: process.stderr,
+        stdout: process.stdout,
+        sudo: true,
+      });
+      if (installClaudeCLI.exitCode !== 0) throw new Error('Claude CLI install failed');
+    }
 
-
-    // Install Box CLI globally
-    const installBoxCLI = await sandbox.runCommand({
-      cmd: 'npm',
-      args: ['install', '-g', '@box/cli'],
-      stderr: process.stderr,
-      stdout: process.stdout,
-      sudo: true,
-    });
-    if (installBoxCLI.exitCode !== 0) throw new Error('Box CLI install failed');
-
-    //console.log(await installBoxCLI.stdout());
-
-    // Run an authenticated Claude Code command in non-interactive (-p) mode
-    const configureBoxEnvironmentCLI = await sandbox.runCommand({
-      cmd: 'box',
-      args: [
-        'configure:environments:add',
-        './jobs/config.json',
-        '--ccg-auth',
-        '--name', 'ci-ccg',
-        '--set-as-current'
-      ],
-      stderr: process.stderr,
-      stdout: process.stdout,
-    });
-
-    //console.log(await configureBoxEnvironmentCLI.stdout());
-
-    const runBoxCLI = await sandbox.runCommand({
-      cmd: 'box',
-      args: [
-        'users:get', 'me'
-      ],
-      stderr: process.stderr,
-      stdout: process.stdout,
-    });
-
-    //console.log(await runBoxCLI.stdout());
-
-    await sandbox.runCommand({
-      cmd: 'npx',
-      args: ['skills', 'add', 'box/box-for-ai'],
-      stderr: process.stderr,
-      stdout: process.stdout,
-      sudo: true,
-    });
-
-    await sandbox.runCommand({
-      cmd: 'npx',
-      args: ['skills', 'add', 'box/box-for-ai', '-a', 'claude-code', '-y'],
-      stderr: process.stderr,
-      stdout: process.stdout,
-      sudo: true,
-    });
-
-    await sandbox.runCommand({
-      cmd: 'npx',
-      args: ['skills', 'add', 'box-community/box-team-mgmt', '-a', 'claude-code', '-y'],
-      stderr: process.stderr,
-      stdout: process.stdout,
-      sudo: true,
-    });
-  
-    const installClaudeCLI = await sandbox.runCommand({
-      cmd: 'npm',
-      args: ['install', '-g', '@anthropic-ai/claude-code'],
-      stderr: process.stderr,
-      stdout: process.stdout,
-      sudo: true,
-    });
-    if (installClaudeCLI.exitCode !== 0) throw new Error('Claude CLI install failed');
-
+    // run the sync command
     const runClaudeCLI = await sandbox.runCommand({
       cmd: 'claude',
       args: [
@@ -181,14 +203,8 @@ export async function processWebhookInSandbox(
 
     console.log(await runClaudeCLI.stdout());
 
-    /*const command = await sandbox.runCommand({
-      cmd: "node",
-      args: ["jobs/processor.mjs", "jobs/event.json"],
-      cwd: "/vercel/sandbox",
-    });*/
-
     return {
-      sandboxId: sandbox.sandboxId
+      sandboxName: sandbox.name
     };
   } finally {
     await sandbox.stop().catch(() => undefined);

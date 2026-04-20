@@ -22,7 +22,7 @@ When creating a new TEAM.md, use this exact template (without example tasks):
 
 Store team data in a Markdown table.
 
-## Current Tasks Section
+## Tasks Section
 
-Create a subheader for every team member with active tasks, along with a copy of that task
+Create a subheader for every team member with tasks, along with a copy of that task and its state
 
